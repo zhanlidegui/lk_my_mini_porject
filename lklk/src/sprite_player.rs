@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::player::{self, *};
+use crate::player:: *;
 
 
 #[derive(Component)]

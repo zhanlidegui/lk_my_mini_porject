@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 
-use crate::player;
+
 use crate::sprite_player::*;
 
 use crate::player::*;
