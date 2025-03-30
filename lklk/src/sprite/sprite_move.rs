@@ -2,7 +2,10 @@
 
 use bevy::prelude::*;
 
+use crate::player;
 use crate::sprite_player::*;
+
+use crate::player::*;
 
 // #[derive(Component)]
 // enum Direction {
@@ -40,12 +43,12 @@ use crate::sprite_player::*;
     
 
 
-
 pub struct SpriteMovePlugin;
 
 impl Plugin for SpriteMovePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup)
+            .add_systems(Update, handle_movement_state)
             .add_systems(Update, animation_sprite)
             .add_systems(FixedUpdate, advance_physics)
             .add_systems(RunFixedMainLoop,
@@ -63,10 +66,14 @@ fn setup(mut commands: Commands,asset_server:Res<AssetServer>,mut texture_atlas_
     let layout = TextureAtlasLayout::from_grid(UVec2::splat(24), 7, 1, None, None);
     let texture_atlas_layouts = texture_atlas_layouts.add(layout);
     let animation_indices = AnimationIndices {
+        zero: 0,
         first: 1,
         last: 6,
     };
-
+    let player = Player{
+        move_speed: 0.0,
+        move_state:false
+    };
     commands.spawn(Camera2d);
     commands.spawn((
         Name::new("Player"),
@@ -79,6 +86,7 @@ fn setup(mut commands: Commands,asset_server:Res<AssetServer>,mut texture_atlas_
         ),
         Transform::from_scale(Vec3::splat(6.0)),
         animation_indices,
+        player,
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         AccumulatedInput::default(),
         Velocity::default(),
@@ -153,14 +161,14 @@ fn advance_physics(
     )>,
 )
 {
-    for(mut current_pyhsical_translation,
+    for(mut current_physical_translation,
         mut previous_physical_translation,
         mut input,
         velocity,
     ) in query.iter_mut()
     {
-        previous_physical_translation.0 = current_pyhsical_translation.0;
-        current_pyhsical_translation.0 += velocity.0 *fixed_time.delta_secs();
+        previous_physical_translation.0 = current_physical_translation.0;
+        current_physical_translation.0 += velocity.0 *fixed_time.delta_secs();
 
         input.0 = Vec2::ZERO;
     }
@@ -188,5 +196,23 @@ fn interpolate_rendered_transform(
         let rendered_translation = previous.lerp(current,alpha);
 
         transform.translation = rendered_translation;
+    }
+}
+
+fn handle_movement_state(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut players: Query<&mut Player>, // 使用复数形式明确表示可能多个实体
+) {
+    // 判断是否有方向键按下
+    let any_movement_key_pressed = keyboard_input.any_pressed([
+        KeyCode::KeyW,
+        KeyCode::KeyS,
+        KeyCode::KeyA,
+        KeyCode::KeyD
+    ]);
+
+    // 遍历所有玩家实体
+    for mut player in &mut players {
+        player.move_state = any_movement_key_pressed;
     }
 }
