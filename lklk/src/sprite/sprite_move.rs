@@ -3,6 +3,7 @@
 use bevy::prelude::*;
 
 
+use crate::player;
 use crate::sprite_player::*;
 
 use crate::player::*;
@@ -71,7 +72,7 @@ fn setup(mut commands: Commands,asset_server:Res<AssetServer>,mut texture_atlas_
         last: 6,
     };
     let player = Player{
-        move_speed: 0.0,
+        move_speed: 1.0,
         move_state:false
     };
     commands.spawn(Camera2d);
@@ -124,15 +125,20 @@ struct PreviousPhysicalTranslation(Vec3);
 // }
 fn handle_input(
     keyboard_input:Res<ButtonInput<KeyCode>>,
-    mut query:Query<(&mut AccumulatedInput,&mut Velocity,&mut Sprite)>
+    mut query:Query<(&mut AccumulatedInput,&mut Velocity,&mut Sprite,&mut Player)>,
 )
 {
     const SPEED:f32 = 210.0;
-    for(mut input,mut velocity,mut sprite) in query.iter_mut()
+    for(mut input,mut velocity,mut sprite,mut player) in query.iter_mut()
     {
-        if keyboard_input.pressed(KeyCode::KeyW) {
+        if keyboard_input.pressed(KeyCode::Space) {
+            player.move_speed = 2.0;
+        }else {
+            player.move_speed = 1.0;
+        }
+        if keyboard_input.pressed(KeyCode::KeyW){
+            
             input.0.y += 1.0;
-
         }
         if keyboard_input.pressed(KeyCode::KeyS) {
             input.0.y -= 1.0;
@@ -145,9 +151,7 @@ fn handle_input(
             input.0.x += 1.0;
             sprite.flip_x = false;
         }
-
-
-        velocity.0 = input.extend(0.0).normalize_or_zero() * SPEED;
+        velocity.0 = input.extend(0.0).normalize_or_zero() * SPEED * player.move_speed;
     }
 }
 
