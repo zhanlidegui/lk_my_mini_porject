@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 
 
-use crate::player;
+
 use crate::sprite_player::*;
 
 use crate::player::*;
@@ -49,7 +49,7 @@ pub struct SpriteMovePlugin;
 impl Plugin for SpriteMovePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup)
-            .add_systems(Update, handle_movement_state)
+            // .add_systems(Update, handle_movement_state)
             .add_systems(Update, animation_sprite)
             .add_systems(FixedUpdate, advance_physics)
             .add_systems(RunFixedMainLoop,
@@ -128,16 +128,23 @@ fn handle_input(
     mut query:Query<(&mut AccumulatedInput,&mut Velocity,&mut Sprite,&mut Player)>,
 )
 {
+    
     const SPEED:f32 = 210.0;
     for(mut input,mut velocity,mut sprite,mut player) in query.iter_mut()
     {
+        let any_movement_key_pressed = keyboard_input.any_pressed([
+            KeyCode::KeyW,
+            KeyCode::KeyS,
+            KeyCode::KeyA,
+            KeyCode::KeyD
+        ]);
+        player.move_state = any_movement_key_pressed;
         if keyboard_input.pressed(KeyCode::Space) {
             player.move_speed = 2.0;
         }else {
             player.move_speed = 1.0;
         }
         if keyboard_input.pressed(KeyCode::KeyW){
-            
             input.0.y += 1.0;
         }
         if keyboard_input.pressed(KeyCode::KeyS) {
@@ -200,23 +207,5 @@ fn interpolate_rendered_transform(
         let rendered_translation = previous.lerp(current,alpha);
 
         transform.translation = rendered_translation;
-    }
-}
-
-fn handle_movement_state(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut players: Query<&mut Player>, // 使用复数形式明确表示可能多个实体
-) {
-    // 判断是否有方向键按下
-    let any_movement_key_pressed = keyboard_input.any_pressed([
-        KeyCode::KeyW,
-        KeyCode::KeyS,
-        KeyCode::KeyA,
-        KeyCode::KeyD
-    ]);
-
-    // 遍历所有玩家实体
-    for mut player in &mut players {
-        player.move_state = any_movement_key_pressed;
     }
 }
