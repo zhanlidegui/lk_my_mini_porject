@@ -75,7 +75,7 @@ fn setup(mut commands: Commands,asset_server:Res<AssetServer>,mut texture_atlas_
         move_speed: 1.0,
         move_state:false
     };
-    commands.spawn(Camera2d);
+    // commands.spawn(Camera2d);
     commands.spawn((
         Name::new("Player"),
         Sprite::from_atlas_image(
