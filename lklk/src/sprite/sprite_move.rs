@@ -1,13 +1,14 @@
 
 
-use bevy::prelude::*;
+use bevy::{prelude::*,
+            math::bounding::Aabb2d};
 
 
 
 use crate::sprite_player::*;
 
 use crate::player::*;
-
+use crate::sprite::collision::*;
 // #[derive(Component)]
 // enum Direction {
 //     Up,
@@ -51,7 +52,12 @@ impl Plugin for SpriteMovePlugin {
         app.add_systems(Startup, setup)
             // .add_systems(Update, handle_movement_state)
             .add_systems(Update, animation_sprite)
-            .add_systems(FixedUpdate, advance_physics)
+            .add_systems(
+                FixedUpdate, 
+                (
+                    advance_physics,
+                    collision_system,
+                ))
             .add_systems(RunFixedMainLoop,
             (
                 handle_input.in_set(RunFixedMainLoopSystem::BeforeFixedMainLoop),
@@ -73,7 +79,11 @@ fn setup(mut commands: Commands,asset_server:Res<AssetServer>,mut texture_atlas_
     };
     let player = Player{
         move_speed: 1.0,
-        move_state:false
+        move_state:false,
+        collision_bottom:false,
+        collision_left:false,
+        collision_right:false,
+        collision_top:false
     };
     // commands.spawn(Camera2d);
     commands.spawn((
@@ -144,19 +154,28 @@ fn handle_input(
         }else {
             player.move_speed = 1.0;
         }
-        if keyboard_input.pressed(KeyCode::KeyW){
+        if keyboard_input.pressed(KeyCode::KeyW) && player.collision_top != true {
             input.0.y += 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyS) {
+        }else if player.collision_top == true {
             input.0.y -= 1.0;
         }
-        if keyboard_input.pressed(KeyCode::KeyA) {
+        if keyboard_input.pressed(KeyCode::KeyS) && player.collision_bottom != true {
+            input.0.y -= 1.0;
+        }else if player.collision_bottom == true {
+            input.0.y += 1.0;
+        }
+        if keyboard_input.pressed(KeyCode::KeyA) && player.collision_left != true {
             input.0.x -= 1.0;
             sprite.flip_x = true;
+        }else if player.collision_left == true {
+            input.0.x += 1.0;
         }
-        if keyboard_input.pressed(KeyCode::KeyD) {
+        if keyboard_input.pressed(KeyCode::KeyD) && player.collision_right != true {
             input.0.x += 1.0;
             sprite.flip_x = false;
+        }else if player.collision_right == true {
+            input.0.x -= 1.0;
+            
         }
         velocity.0 = input.extend(0.0).normalize_or_zero() * SPEED * player.move_speed;
     }

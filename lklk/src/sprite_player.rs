@@ -21,16 +21,27 @@ pub fn animation_sprite(
 {
     for (indices,mut timer,mut sprite,player) in &mut query {
 
-        if player.move_state == false {
+        if player.move_state == false { 
             if let Some(atlas) = &mut sprite.texture_atlas{
                 atlas.index = indices.zero;
             }
             timer.reset();
             continue;
-        }
+        }           
 
         timer.tick(time.delta());
-
+        if timer.just_finished() {
+            if let Some(atlas) = &mut sprite.texture_atlas{
+                atlas.index = if atlas.index == indices.last{
+                    indices.first
+                }else{
+                    atlas.index + 1
+                };
+            }
+        }
+        if timer.elapsed_secs() > 0.1 {
+            timer.reset();
+        }
         if timer.finished() {
             if let Some(atlas) = &mut sprite.texture_atlas{
                 atlas.index = if atlas.index == indices.last{
