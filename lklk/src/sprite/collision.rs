@@ -6,7 +6,8 @@ use crate::player::{self,  *};
 use crate::map::*;
 
 
-
+#[derive(Component)]
+pub struct Collider;
 
 
 
